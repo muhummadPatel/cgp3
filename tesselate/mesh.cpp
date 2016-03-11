@@ -846,7 +846,7 @@ bool Mesh::pointContainment(cgp::Point pnt)
         else // point is inside
             incount++;
     }
-    
+
     // consensus wins
     return (incount > outcount);
 }
@@ -893,7 +893,71 @@ void Mesh::boxFit(float sidelen)
 
 void Mesh::marchingCubes(VoxelVolume vox)
 {
-    // stub, needs completing
+    cerr << "Marching" << endl;
+
+    int xlim, ylim, zlim;
+    vox.getDim(xlim, ylim, zlim);
+
+    cgp::Point corner;
+    cgp::Vector diagonal;
+    vox.getFrame(corner, diagonal);
+
+    cgp::Vector cellDim(0.0f, 0.0f, 0.0f);
+    if(xlim > 0 && ylim > 0 && zlim > 0){
+        cellDim = cgp::Vector(diagonal.i / (float) xlim, diagonal.j / (float) ylim, diagonal.k / (float) zlim);
+    }
+
+    for(int x = 0; x < xlim-1; x++)
+    for(int y = 0; y < ylim-1; y++)
+    for(int z = 0; z < zlim-1; z++){
+
+        // Find which of the 8 corners are inside/outside and save this in flagIndex
+        int flagIndex = vox.getMCVertIdx(x, y, z);
+
+        // get edge code
+        int edgeFlags = vox.getMCEdgeIdx(flagIndex);
+
+        if(edgeFlags == 0){
+            continue;
+        }
+
+        cgp::Point asEdgeVertex[12];
+        // Find the intersection of the isosurface with each edge of the cube
+        for(int edge = 0; edge < 12; edge++)
+        {
+            cgp::Point off = vox.getMCEdgeXsect(edge);
+            //if there is an intersection on this edge, add it to the asEdgeVertex array
+            if(edgeFlags & (1<<edge)){
+                cgp::Point worldPos = vox.getVoxelPos(x, y, z);
+                asEdgeVertex[edge].x = worldPos.x + (off.x * cellDim.i);
+                asEdgeVertex[edge].y = worldPos.y + (off.y * cellDim.j);
+                asEdgeVertex[edge].z = worldPos.z + (off.z * cellDim.k);
+            }
+        }
+
+        //Draw the triangles that were found.  There can be up to five per cube
+        for(int triangle = 0; triangle < 5; triangle++){
+            if(triangleTable[flagIndex][3*triangle] < 0)
+                break;
+
+            for(int corner = 0; corner < 3; corner++){
+                int vert = triangleTable[flagIndex][3*triangle+corner];
+                verts.push_back(asEdgeVertex[vert]);
+            }
+
+            int limit = verts.size();
+            Triangle t;
+            t.v[0] = limit - 1;
+            t.v[1] = limit - 2;
+            t.v[2] = limit - 3;
+            tris.push_back(t);
+        }
+    }
+
+    mergeVerts();
+    deriveFaceNorms();
+    deriveVertNorms();
+    cerr << "Done marching!" << endl;
 }
 
 void Mesh::laplacianSmooth(int iter, float rate)
@@ -901,6 +965,8 @@ void Mesh::laplacianSmooth(int iter, float rate)
     // stub, needs completing
     deriveFaceNorms();
     deriveVertNorms();
+    GLfloat afAmbientBlue  [] = {0.00, 0.00, 0.25, 1.00};
+    setColour(afAmbientBlue);
 }
 
 void Mesh::applyFFD(ffd * lat)
@@ -1153,7 +1219,7 @@ bool Mesh::basicValidity()
             cerr << "Error Mesh::basicValidity(): dangling vertex found" << endl;
             return false; // early out
         }
-    
+
     return true;
 }
 
