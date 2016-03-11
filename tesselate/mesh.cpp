@@ -17,6 +17,7 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <unordered_map>
+#include <set>
 
 using namespace std;
 using namespace cgp;
@@ -962,11 +963,58 @@ void Mesh::marchingCubes(VoxelVolume vox)
 
 void Mesh::laplacianSmooth(int iter, float rate)
 {
-    // stub, needs completing
+    cerr << "Smoothing" << endl;
+
+    // get list of triangles adjacent to each vertex
+    std::vector<std::vector<int>> incident;
+    std::vector<int> empty_vec;
+    for(int v = 0; v < (int) verts.size(); v++)
+        incident.push_back(empty_vec);
+    for(int t = 0; t < (int) tris.size(); t++)
+        for(int i = 0; i < 3; i++)
+            incident[tris[t].v[i]].push_back(t);
+
+
+    // Implementation below based on algorithm described in slides below:
+    // http://mesh.brown.edu/3dpgp-2008/notes/3DPGP-Smoothing-handout.pdf
+    for(int i = 0; i < iter; i++){
+        // for each vertex
+        for(int vert = 0; vert < verts.size(); vert++){
+            // get the list of neighbouring vertices by adding the vertices of all
+            // triangles around this vertex
+            std::set<int> neighbour_verts;
+            for(int tri = 0; tri < incident[vert].size(); tri++){
+                Triangle t = tris[incident[vert][tri]];
+
+                neighbour_verts.insert(t.v[0]);
+                neighbour_verts.insert(t.v[1]);
+                neighbour_verts.insert(t.v[2]);
+            }
+            neighbour_verts.erase(vert);
+
+            // compute the average difference (delta_v) between vert and neighbour_verts
+            cgp::Point delta_v(0.0f, 0.0f, 0.0f);
+            for(auto neighbour = neighbour_verts.begin(); neighbour != neighbour_verts.end(); neighbour++){
+                delta_v.x += (verts[*neighbour].x - verts[vert].x);
+                delta_v.y += (verts[*neighbour].y - verts[vert].y);
+                delta_v.z += (verts[*neighbour].z - verts[vert].z);
+            }
+            float avg_factor = 1.0f / neighbour_verts.size();
+            delta_v.x *= avg_factor;
+            delta_v.y *= avg_factor;
+            delta_v.z *= avg_factor;
+
+            // update this vertex to be smoother
+            verts[vert].x += (rate * delta_v.x);
+            verts[vert].y += (rate * delta_v.y);
+            verts[vert].z += (rate * delta_v.z);
+        }
+    }
+
     deriveFaceNorms();
     deriveVertNorms();
-    GLfloat afAmbientBlue  [] = {0.00, 0.00, 0.25, 1.00};
-    setColour(afAmbientBlue);
+
+    cerr << "Smooth done!" << endl;
 }
 
 void Mesh::applyFFD(ffd * lat)
