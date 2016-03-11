@@ -217,7 +217,23 @@ int VoxelVolume::getMCVertIdx(int x, int y, int z)
 {
     // stub, needs completing
     // refer to data structures at the top of voxels.cpp and mesh.cpp
-    return 0;
+    int cubeValue[8];
+    for(int vertex = 0; vertex < 8; vertex++){
+        int xoff = cubePos[vertex][0];
+        int yoff = cubePos[vertex][1];
+        int zoff = cubePos[vertex][2];
+
+        cubeValue[vertex] = get(x+xoff, y+yoff, z+zoff);
+    }
+
+    //Find which vertices are inside of the surface and which are outside
+    int flagIndex = 0;
+    for(int vertexTest = 0; vertexTest < 8; vertexTest++){
+        if(cubeValue[vertexTest] == 1)
+            flagIndex |= 1<<vertexTest;
+    }
+
+    return flagIndex;
 }
 
 int VoxelVolume::getMCEdgeIdx(int vcode)
