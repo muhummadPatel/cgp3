@@ -77,6 +77,17 @@ ffd::ffd(int xnum, int ynum, int znum, cgp::Point corner, cgp::Vector diag)
 void ffd::reset()
 {
     // stub, needs completing
+
+    float px, py, pz;
+    for(int z = 0; z < dimz; z++)
+    for(int y = 0; y < dimy; y++)
+    for(int x = 0; x < dimx; x++){
+        px = (float) x / (float) (dimx-1);
+        py = (float) y / (float) (dimy-1);
+        pz = (float) z / (float) (dimz-1);
+
+        cp[x][y][z] = cgp::Point(origin.x + px * diagonal.i, origin.y + py * diagonal.j, origin.z + pz * diagonal.k);
+    }
 }
 
 void ffd::getDim(int &numx, int &numy, int &numz)
