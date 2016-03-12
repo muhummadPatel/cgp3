@@ -73,7 +73,7 @@ private:
     Mesh voxmesh;                   ///< isosurface of voxel volume
 
     /**
-     * Generate triangle mesh geometry for OpenGL rendering of all leaf nodes. 
+     * Generate triangle mesh geometry for OpenGL rendering of all leaf nodes.
      * Does not capture set operations at all (except where all set operations are a union)
      * @param view      current view parameters
      * @param[out] sdd  openGL parameters required to draw this geometry
@@ -109,6 +109,10 @@ private:
     void voxWalk(SceneNode *root, VoxelVolume *voxels);
 
 public:
+    //TODO: deleeeete
+    inline bool writeSTL(string outfile){
+        return voxmesh.writeSTL(outfile);
+    }
 
     ShapeGeometry geom;         ///< triangle mesh geometry for scene
 

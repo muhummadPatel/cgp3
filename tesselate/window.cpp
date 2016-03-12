@@ -255,6 +255,26 @@ void Window::saveFile()
 
 void Window::saveAs()
 {
+    QFileDialog::Options options;
+    QString selectedFilter;
+    tessfilename = QFileDialog::getSaveFileName(this,
+                                                tr("Save Tesselation"),
+                                                "~/",
+                                                tr("STL File (*.stl)"),
+                                                &selectedFilter,
+                                                options);
+    if (!tessfilename.isEmpty())
+    {
+        std::string outfile = tessfilename.toUtf8().constData();
+        if(!endsWith(outfile, ".stl"))
+            outfile = outfile + ".stl";
+        if(!perspectiveView->scene.writeSTL(outfile)) // error message
+        {
+            QMessageBox msgBox;
+            msgBox.setText("Unable to save mesh to file");
+            msgBox.exec();
+        }
+    }
 }
 
 void Window::showModel(int show)

@@ -62,6 +62,7 @@ public:
 
     /// respond to key press events
     void keyPressEvent(QKeyEvent *event);
+    Scene scene; //TODO: deleete
 
 signals:
 
@@ -93,7 +94,8 @@ protected:
 private:
 
     // scene control
-    Scene scene;                        ///< scene represented as CSG tree
+    //TODO: uncomment
+    //Scene scene;                        ///< scene represented as CSG tree
     ffd def;                            ///< free-form deformation lattice
     View view;                          ///< current viewpoint
     vector<ShapeDrawData> drawParams;   ///< OpenGL drawing parameters
