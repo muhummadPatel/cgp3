@@ -929,10 +929,11 @@ void Mesh::marchingCubes(VoxelVolume vox)
             cgp::Point off = vox.getMCEdgeXsect(edge);
             //if there is an intersection on this edge, add it to the asEdgeVertex array
             if(edgeFlags & (1<<edge)){
-                cgp::Point worldPos = vox.getVoxelPos(x, y, z);
-                asEdgeVertex[edge].x = worldPos.x + (off.x * cellDim.i);
-                asEdgeVertex[edge].y = worldPos.y + (off.y * cellDim.j);
-                asEdgeVertex[edge].z = worldPos.z + (off.z * cellDim.k);
+                // TODO: Why does this work??? Also, clean up the commented out lines.
+                cgp::Point worldPos = vox.getVoxelPos(x + off.x, y + off.y, z + off.z);
+                // asEdgeVertex[edge].x = worldPos.x;// + (off.x * cellDim.i);
+                // asEdgeVertex[edge].y = worldPos.y;// + (off.y * cellDim.j);
+                // asEdgeVertex[edge].z = worldPos.z;// + (off.z * cellDim.k);
             }
         }
 
@@ -1014,15 +1015,18 @@ void Mesh::laplacianSmooth(int iter, float rate)
     deriveFaceNorms();
     deriveVertNorms();
 
-    cerr << "Smooth done!" << endl;
+    cerr << "Done smoothing!" << endl;
 }
 
 void Mesh::applyFFD(ffd * lat)
 {
+    cerr << "Deforming" << endl;
     // deform every vertex in this mesh
     for(int i = 0; i < verts.size(); i++){
         lat->deform(verts[i]);
     }
+
+    cerr << "Done deforming" << endl;
 }
 
 bool Mesh::readSTL(string filename)
