@@ -4,6 +4,7 @@
 
 #include "ffd.h"
 #include <stdio.h>
+#include <math.h>
 
 using namespace std;
 
@@ -76,17 +77,20 @@ ffd::ffd(int xnum, int ynum, int znum, cgp::Point corner, cgp::Vector diag)
 
 void ffd::reset()
 {
-    // stub, needs completing
+    cgp::Vector uniS(diagonal.i, 0.0f, 0.0f);
+    cgp::Vector uniT(0.0f, diagonal.j, 0.0f);
+    cgp::Vector uniU(0.0f, 0.0f, diagonal.k);
 
-    float px, py, pz;
-    for(int z = 0; z < dimz; z++)
-    for(int y = 0; y < dimy; y++)
-    for(int x = 0; x < dimx; x++){
-        px = (float) x / (float) (dimx-1);
-        py = (float) y / (float) (dimy-1);
-        pz = (float) z / (float) (dimz-1);
-
-        cp[x][y][z] = cgp::Point(origin.x + px * diagonal.i, origin.y + py * diagonal.j, origin.z + pz * diagonal.k);
+    float l = dimx-1;
+    float m = dimy-1;
+    float n = dimz-1;
+    for(int k = 0; k < dimz; k++)
+    for(int j = 0; j < dimy; j++)
+    for(int i = 0; i < dimx; i++){
+        cp[i][j][k] = origin;
+        cp[i][j][k].x += ((i/l) * uniS.i) + ((j/m) * uniT.i) + ((k/n) * uniU.i);
+        cp[i][j][k].y += ((i/l) * uniS.j) + ((j/m) * uniT.j) + ((k/n) * uniU.j);
+        cp[i][j][k].z += ((i/l) * uniS.k) + ((j/m) * uniT.k) + ((k/n) * uniU.k);
     }
 }
 
@@ -220,7 +224,60 @@ void ffd::setCP(int i, int j, int k, cgp::Point pnt)
         cp[i][j][k] = pnt;
 }
 
+int choose(int n, int k){
+    if(k == 0)
+        return 1;
+
+    return (n * choose(n - 1, k - 1)) / k;
+}
+
 void ffd::deform(cgp::Point & pnt)
 {
-    // stub, needs completing
+    cgp::Vector uniS(diagonal.i, 0.0f, 0.0f);
+    cgp::Vector uniT(0.0f, diagonal.j, 0.0f);
+    cgp::Vector uniU(0.0f, 0.0f, diagonal.k);
+
+    cgp::Vector XminX0;
+    XminX0.diff(origin, pnt);
+
+    cgp::Vector TcrossU;
+    TcrossU.cross(uniT, uniU);
+    float s = (TcrossU.dot(XminX0)) / (TcrossU.dot(uniS));
+
+    cgp::Vector ScrossU;
+    ScrossU.cross(uniS, uniU);
+    float t = (ScrossU.dot(XminX0)) / (ScrossU.dot(uniT));
+
+    cgp::Vector ScrossT;
+    ScrossT.cross(uniS, uniT);
+    float u = (ScrossT.dot(XminX0)) / (ScrossT.dot(uniU));
+
+    cgp::Point xSum(0.0f, 0.0f, 0.0f);
+    for(int x = 0; x < dimx; x++){
+        cgp::Point ySum(0.0f, 0.0f, 0.0f);
+        for(int y = 0; y < dimy; y++){
+            cgp::Point zSum(0.0f, 0.0f, 0.0f);
+            for(int z = 0; z < dimz; z++){
+                float zfact = choose(dimz-1, z) * pow((1 - u), ((dimz-1) - z)) * pow(u, z);
+
+                zSum.x += zfact * cp[x][y][z].x;
+                zSum.y += zfact * cp[x][y][z].y;
+                zSum.z += zfact * cp[x][y][z].z;
+            }
+
+            float yfact = choose(dimy-1, y) * pow((1 - t), ((dimy-1) - y)) * pow(t, y);
+
+            ySum.x += yfact * zSum.x;
+            ySum.y += yfact * zSum.y;
+            ySum.z += yfact * zSum.z;
+        }
+
+        float xfact = choose(dimx-1, x) * pow((1 - s), ((dimx-1) - x)) * pow(s, x);
+
+        xSum.x += xfact * ySum.x;
+        xSum.y += xfact * ySum.y;
+        xSum.z += xfact * ySum.z;
+    }
+
+    pnt = xSum;
 }
