@@ -931,9 +931,9 @@ void Mesh::marchingCubes(VoxelVolume vox)
             if(edgeFlags & (1<<edge)){
                 // TODO: Why does this work??? Also, clean up the commented out lines.
                 cgp::Point worldPos = vox.getVoxelPos(x + off.x, y + off.y, z + off.z);
-                // asEdgeVertex[edge].x = worldPos.x;// + (off.x * cellDim.i);
-                // asEdgeVertex[edge].y = worldPos.y;// + (off.y * cellDim.j);
-                // asEdgeVertex[edge].z = worldPos.z;// + (off.z * cellDim.k);
+                asEdgeVertex[edge].x = worldPos.x;// + (off.x * cellDim.i);
+                asEdgeVertex[edge].y = worldPos.y;// + (off.y * cellDim.j);
+                asEdgeVertex[edge].z = worldPos.z;// + (off.z * cellDim.k);
             }
         }
 
