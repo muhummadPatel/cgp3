@@ -3,6 +3,7 @@ set(TEST_SOURCES
     test_mesh.cpp
     test_voxels.cpp
     test_csg.cpp
+    test_ffd.cpp
     tilertest.cpp
 )
 
@@ -18,10 +19,10 @@ else()
     set(NO_WHOLE_ARCHIVE "-Wl,--no-whole-archive")
 endif()
 
-target_link_libraries(tilertest tess 
-    ${WHOLE_ARCHIVE} ${TEST_LIBS} 
-    ${NO_WHOLE_ARCHIVE} 
-    ${CppUnit_LIBRARIES} 
+target_link_libraries(tilertest tess
+    ${WHOLE_ARCHIVE} ${TEST_LIBS}
+    ${NO_WHOLE_ARCHIVE}
+    ${CppUnit_LIBRARIES}
     ${Boost_SERIALIZATION_LIBRARY}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
