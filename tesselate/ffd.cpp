@@ -77,13 +77,13 @@ ffd::ffd(int xnum, int ynum, int znum, cgp::Point corner, cgp::Vector diag)
 
 void ffd::reset()
 {
+    // calculate the S, T, and U vectors
     cgp::Vector uniS(diagonal.i, 0.0f, 0.0f);
     cgp::Vector uniT(0.0f, diagonal.j, 0.0f);
     cgp::Vector uniU(0.0f, 0.0f, diagonal.k);
 
-    float l = dimx-1;
-    float m = dimy-1;
-    float n = dimz-1;
+    // position each of the control points in the lattice(relative to origin)
+    float l = dimx-1; float m = dimy-1; float n = dimz-1;
     for(int k = 0; k < dimz; k++)
     for(int j = 0; j < dimy; j++)
     for(int i = 0; i < dimx; i++){
@@ -233,10 +233,12 @@ int choose(int n, int k){
 
 void ffd::deform(cgp::Point & pnt)
 {
+    // S, T, and U vectors
     cgp::Vector uniS(diagonal.i, 0.0f, 0.0f);
     cgp::Vector uniT(0.0f, diagonal.j, 0.0f);
     cgp::Vector uniU(0.0f, 0.0f, diagonal.k);
 
+    // calculate the relevant terms needed for the deform equation
     cgp::Vector XminX0;
     XminX0.diff(origin, pnt);
 
@@ -252,6 +254,8 @@ void ffd::deform(cgp::Point & pnt)
     ScrossT.cross(uniS, uniT);
     float u = (ScrossT.dot(XminX0)) / (ScrossT.dot(uniU));
 
+    // Evaluate the vector valued trivariate Bernstein polynomial to account for
+    // the influence of each of the control points in the cp lattice
     cgp::Point xSum(0.0f, 0.0f, 0.0f);
     for(int x = 0; x < dimx; x++){
         cgp::Point ySum(0.0f, 0.0f, 0.0f);
@@ -279,5 +283,5 @@ void ffd::deform(cgp::Point & pnt)
         xSum.z += xfact * ySum.z;
     }
 
-    pnt = xSum;
+    pnt = xSum; // set pnt to the computed deformed position
 }

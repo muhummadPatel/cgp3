@@ -896,6 +896,7 @@ void Mesh::marchingCubes(VoxelVolume vox)
 {
     cerr << "Marching" << endl;
 
+    // get the dimensions of the voxelvolume
     int xlim, ylim, zlim;
     vox.getDim(xlim, ylim, zlim);
 
@@ -903,21 +904,18 @@ void Mesh::marchingCubes(VoxelVolume vox)
     cgp::Vector diagonal;
     vox.getFrame(corner, diagonal);
 
-    cgp::Vector cellDim(0.0f, 0.0f, 0.0f);
-    if(xlim > 0 && ylim > 0 && zlim > 0){
-        cellDim = cgp::Vector(diagonal.i / (float) xlim, diagonal.j / (float) ylim, diagonal.k / (float) zlim);
-    }
-
+    // loop through the entire voxelvolume
     for(int x = 0; x < xlim-1; x++)
     for(int y = 0; y < ylim-1; y++)
     for(int z = 0; z < zlim-1; z++){
 
-        // Find which of the 8 corners are inside/outside and save this in flagIndex
+        // Find which of the 8 corners are inside/outside this cell and save this in flagIndex
         int flagIndex = vox.getMCVertIdx(x, y, z);
 
         // get edge code
         int edgeFlags = vox.getMCEdgeIdx(flagIndex);
 
+        // If there are no vertices on the edges of this cell, we can move to the next cell
         if(edgeFlags == 0){
             continue;
         }
@@ -927,17 +925,16 @@ void Mesh::marchingCubes(VoxelVolume vox)
         for(int edge = 0; edge < 12; edge++)
         {
             cgp::Point off = vox.getMCEdgeXsect(edge);
-            //if there is an intersection on this edge, add it to the asEdgeVertex array
+            // if there is an intersection on this edge, add it to the asEdgeVertex array
             if(edgeFlags & (1<<edge)){
-                // TODO: Why does this work??? Also, clean up the commented out lines.
                 cgp::Point worldPos = vox.getVoxelPos(x + off.x, y + off.y, z + off.z);
-                asEdgeVertex[edge].x = worldPos.x;// + (off.x * cellDim.i);
-                asEdgeVertex[edge].y = worldPos.y;// + (off.y * cellDim.j);
-                asEdgeVertex[edge].z = worldPos.z;// + (off.z * cellDim.k);
+                asEdgeVertex[edge].x = worldPos.x;
+                asEdgeVertex[edge].y = worldPos.y;
+                asEdgeVertex[edge].z = worldPos.z;
             }
         }
 
-        //Draw the triangles that were found.  There can be up to five per cube
+        // draw the triangles that were found by pushing them into verts and tris
         for(int triangle = 0; triangle < 5; triangle++){
             if(triangleTable[flagIndex][3*triangle] < 0)
                 break;
@@ -956,6 +953,7 @@ void Mesh::marchingCubes(VoxelVolume vox)
         }
     }
 
+    // clean up the mesh and calculate the normals
     mergeVerts();
     deriveFaceNorms();
     deriveVertNorms();
@@ -991,7 +989,7 @@ void Mesh::laplacianSmooth(int iter, float rate)
                 neighbour_verts.insert(t.v[1]);
                 neighbour_verts.insert(t.v[2]);
             }
-            neighbour_verts.erase(vert);
+            neighbour_verts.erase(vert); //because we only want the neighbours
 
             // compute the average difference (delta_v) between vert and neighbour_verts
             cgp::Point delta_v(0.0f, 0.0f, 0.0f);
@@ -1012,20 +1010,21 @@ void Mesh::laplacianSmooth(int iter, float rate)
         }
     }
 
+    // recalculate the normals so that the model looks good
     deriveFaceNorms();
     deriveVertNorms();
-
     cerr << "Done smoothing!" << endl;
 }
 
 void Mesh::applyFFD(ffd * lat)
 {
     cerr << "Deforming" << endl;
-    // deform every vertex in this mesh
+    // apply the deformation to every vertex in the mesh
     for(int i = 0; i < verts.size(); i++){
         lat->deform(verts[i]);
     }
 
+    // recalculate the normals so that they match the new deformed vertex positions
     deriveFaceNorms();
     deriveVertNorms();
     cerr << "Done deforming" << endl;

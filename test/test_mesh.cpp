@@ -60,6 +60,9 @@ void TestMesh::testMeshing()
 }
 
 void TestMesh::testSmoothing(){
+    // set up a valid tetrahedron to test smoothing on
+    mesh->validTetTest();
+
     std::vector<cgp::Point> expected_smoothed_verts = {
         cgp::Point(0.5f, 0.5f, 0.33f),
         cgp::Point(0.5f, 0.5f, 0.33f),
@@ -67,10 +70,9 @@ void TestMesh::testSmoothing(){
         cgp::Point(0.5f, 0.5f, 0.33f)
     };
 
-    mesh->validTetTest();
+    mesh->laplacianSmooth(6, 1); //apply the smoothing
 
-    mesh->laplacianSmooth(6, 1);
-
+    // check that the verts are smoothed as expected
     for(int i = 0; i < mesh->verts.size(); i++){
         CPPUNIT_ASSERT_DOUBLES_EQUAL(expected_smoothed_verts[i].x, mesh->verts[i].x, 0.01f);
         CPPUNIT_ASSERT_DOUBLES_EQUAL(expected_smoothed_verts[i].y, mesh->verts[i].y, 0.01f);
@@ -81,9 +83,10 @@ void TestMesh::testSmoothing(){
 }
 
 void TestMesh::testMarchingCubes(){
+    // set up a voxelVolume with only voxel at (0,0,0) set to true
     float voxlen = 5.0f;
     cgp::Vector voldiag(10.0f, 10.0f, 10.0f);
-    int xdim = ceil(voldiag.i / voxlen)+2; // needs a 1 voxel border to ensure a closed mesh
+    int xdim = ceil(voldiag.i / voxlen)+2;
     int ydim = ceil(voldiag.j / voxlen)+2;
     int zdim = ceil(voldiag.k / voxlen)+2;
     cgp::Vector voxdiag = cgp::Vector((float) xdim * voxlen, (float) ydim * voxlen, (float) zdim * voxlen);
@@ -95,9 +98,9 @@ void TestMesh::testMarchingCubes(){
     vox->fill(false);
     vox->set(0, 0, 0, true);
 
-    mesh->marchingCubes(*vox);
+    mesh->marchingCubes(*vox); // run the marching cubes method
 
-    CPPUNIT_ASSERT(mesh->verts.size() == 1);
+    // there should be a single triangle formed as per case 1 in the research paper
     CPPUNIT_ASSERT(mesh->tris.size() == 1);
 
     cerr << "MESH MARCHING CUBES PASSED" << endl << endl;

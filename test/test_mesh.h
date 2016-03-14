@@ -35,8 +35,14 @@ public:
      */
     void testMeshing();
 
+    /**
+     * Test that the laplacian smoothing method correctly smooths a mesh
+     */
     void testSmoothing();
 
+    /**
+     * Test that the marching cubes method correctly adds triangles to the mesh
+     */
     void testMarchingCubes();
 };
 
