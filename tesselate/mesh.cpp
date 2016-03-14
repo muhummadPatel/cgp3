@@ -1026,6 +1026,8 @@ void Mesh::applyFFD(ffd * lat)
         lat->deform(verts[i]);
     }
 
+    deriveFaceNorms();
+    deriveVertNorms();
     cerr << "Done deforming" << endl;
 }
 
