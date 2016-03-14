@@ -59,6 +59,50 @@ void TestMesh::testMeshing()
 
 }
 
+void TestMesh::testSmoothing(){
+    std::vector<cgp::Point> expected_smoothed_verts = {
+        cgp::Point(0.5f, 0.5f, 0.33f),
+        cgp::Point(0.5f, 0.5f, 0.33f),
+        cgp::Point(0.5f, 0.5f, 0.33f),
+        cgp::Point(0.5f, 0.5f, 0.33f)
+    };
+
+    mesh->validTetTest();
+
+    mesh->laplacianSmooth(6, 1);
+
+    for(int i = 0; i < mesh->verts.size(); i++){
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(expected_smoothed_verts[i].x, mesh->verts[i].x, 0.01f);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(expected_smoothed_verts[i].y, mesh->verts[i].y, 0.01f);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(expected_smoothed_verts[i].z, mesh->verts[i].z, 0.01f);
+    }
+
+    cerr << "MESH SMOOTHING PASSED" << endl << endl;
+}
+
+void TestMesh::testMarchingCubes(){
+    float voxlen = 5.0f;
+    cgp::Vector voldiag(10.0f, 10.0f, 10.0f);
+    int xdim = ceil(voldiag.i / voxlen)+2; // needs a 1 voxel border to ensure a closed mesh
+    int ydim = ceil(voldiag.j / voxlen)+2;
+    int zdim = ceil(voldiag.k / voxlen)+2;
+    cgp::Vector voxdiag = cgp::Vector((float) xdim * voxlen, (float) ydim * voxlen, (float) zdim * voxlen);
+    cgp::Point voxorigin = cgp::Point(-0.5f*voxdiag.i, -0.5f*voxdiag.j, -0.5f*voxdiag.k);
+
+    VoxelVolume* vox = new VoxelVolume();
+    vox->setDim(xdim, ydim, zdim);
+    vox->setFrame(voxorigin, voxdiag);
+    vox->fill(false);
+    vox->set(0, 0, 0, true);
+
+    mesh->marchingCubes(*vox);
+
+    CPPUNIT_ASSERT(mesh->verts.size() == 1);
+    CPPUNIT_ASSERT(mesh->tris.size() == 1);
+
+    cerr << "MESH MARCHING CUBES PASSED" << endl << endl;
+}
+
 //#if 0 /* Disabled since it crashes the whole test suite */
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TestMesh, TestSet::perBuild());
 //#endif
